@@ -78,6 +78,11 @@ var budgetController = (function(){
 				percentage: data.percentage
 			}
 		},
+
+		deleteItem: function(type,ID){
+			data.allItems[type];			
+
+		},
 		testing: function(){
 			console.log(data);
 		}
@@ -222,7 +227,7 @@ var controller = (function(UICtrl,budgetCtrl){
 		splitID = itemID.split('-');
 		type = splitID[0];
 		ID = parseInt(splitID[1]);
-		
+		budgetCtrl.deleteItem(type,ID);
 		
 	};
 
