@@ -76,11 +76,21 @@ var budgetController = (function(){
 				totalInc: data.totals.inc,
 				totalExp: data.totals.exp,
 				percentage: data.percentage
-			}
+			};
 		},
 
-		deleteItem: function(type,ID){
-			data.allItems[type];			
+		deleteItem: function(type,id){
+			var ids, index;
+			ids = data.allItems[type].map(function(current){
+				return current.id;
+			});
+			index = ids.indexOf(id);
+			
+			if(index !== -1){{
+				data.allItems[type].splice(index, 1);
+			}
+
+			}
 
 		},
 		testing: function(){
@@ -106,7 +116,9 @@ var UIcontroller = (function(){
 		budgetIncomeVal: '.budget__income--value',
 		budgetExpensesval: '.budget__expenses--value',
 		budgetPercentage: '.budget__expenses--percentage',
-		container: '.container'
+		container: '.container',
+
+
 
 
 	};
@@ -152,6 +164,12 @@ var UIcontroller = (function(){
 			fieldsArr[0].focus();
 		},
 
+		deleteListItem: function(selectorID){
+			var el = document.getElementById(selectorID);
+			el.parentNode.removeChild(el);
+
+		},
+
 		displayBudget: function(obj){
 			document.querySelector(DOMstrings.budgetLabel).textContent = obj.budget;
 			document.querySelector(DOMstrings.budgetIncomeVal).textContent = obj.totalInc;
@@ -163,8 +181,6 @@ var UIcontroller = (function(){
 			}
 
 		},
-
-
 
 		getDOMstrings: function(){
 		return DOMstrings;
@@ -205,11 +221,13 @@ var controller = (function(UICtrl,budgetCtrl){
 
 
 	var ctrlAddItem = function(){
-			var input = UICtrl.getInput(); 						// this is where the data after the enter
+			var input, newItem; 
+			
+			input = UICtrl.getInput(); 						// this is where the data after the enter
 
 			if(input.description !== "" && !isNaN(input.value) && input.value > 0){
 
-				var newItem = budgetCtrl.addItem(input.type,input.description,input.value);
+				newItem = budgetCtrl.addItem(input.type,input.description,input.value);
 				UICtrl.addListItem(newItem,input.type);
 				UICtrl.clearFields();
 				updateBudget();
@@ -219,15 +237,19 @@ var controller = (function(UICtrl,budgetCtrl){
 			}
 
 			
-		};
+	};
 
 	var ctrlDeleteItem = function(e){
-		var itemID, type,ID, splitID;
+		var itemID, type,id, splitID;
+
 		itemID = e.target.parentNode.parentNode.parentNode.parentNode.id;
 		splitID = itemID.split('-');
 		type = splitID[0];
-		ID = parseInt(splitID[1]);
-		budgetCtrl.deleteItem(type,ID);
+		id = parseInt(splitID[1]);
+		budgetCtrl.deleteItem(type,id);
+		UICtrl.deleteListItem(itemID);
+		updateBudget();
+		
 		
 	};
 
