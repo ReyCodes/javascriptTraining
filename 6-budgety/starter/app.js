@@ -4,7 +4,23 @@ var budgetController = (function(){
 		this.id = id;
 		this.description = description;
 		this.value = value;
-	}
+		this.percentage = -1;
+	};
+
+	Expense.prototype.calcPer = function(totalIncome){
+
+		if(totalIncome > 0){
+			this.percentage = Math.round((this.value / totalIncome) * 100);
+
+		}
+		else{
+			this.percentage = -1;
+		}
+	};
+
+	Expense.prototype.getPercentage = function(){
+		return this.percentage;
+	};
 
 	var Income = function(id,description,value){
 		this.id = id;
@@ -79,6 +95,21 @@ var budgetController = (function(){
 			};
 		},
 
+		calculatePercentages: function(){
+			data.allItems.exp.forEach(function(cur){
+				cur.calcPer(data.totals.inc);
+			});
+		},
+
+		getPercentages : function(){
+			var allPerc = data.allItems.exp.map(function(cur){
+				return cur.getPercentage();
+			});
+			return allPerc;
+		},
+
+
+
 		deleteItem: function(type,id){
 			var ids, index;
 			ids = data.allItems[type].map(function(current){
@@ -117,10 +148,7 @@ var UIcontroller = (function(){
 		budgetExpensesval: '.budget__expenses--value',
 		budgetPercentage: '.budget__expenses--percentage',
 		container: '.container',
-
-
-
-
+		expensesPerc: '.item__percentage'
 	};
 
 	return{
@@ -140,7 +168,7 @@ var UIcontroller = (function(){
 
 			}else if(type === 'exp'){
 				element = DOMstrings.expensesContainer;
-				html = '<div class="item clearfix" id="exp-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__percentage">21%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
+				html = '<div class="item clearfix" id="exp-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__percentage">---</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
 			}
 
 			newHtml = html.replace('%id%',obj.id);
@@ -182,6 +210,45 @@ var UIcontroller = (function(){
 
 		},
 
+		displayPercentages: function(percentages){
+			var fields =document.querySelectorAll(DOMstrings.expensesPerc);
+
+			var nodeListForEach = function(list,callback){
+				for(var i = 0;i<list.length; i++){
+					callback(list[i],i);
+				}
+
+			};
+			
+			nodeListForEach(fields,function(cur,index){
+
+			if(percentages[index] > 0){
+				cur.textContent = percentages[index] + '%';
+			}
+			else{
+				cur.textContent = '---';
+			}
+			});
+
+		},
+
+		formatNumber: function(num, add){
+
+			num = Math.abs(num);
+			num = num.toFixed(2);
+			numSplit = num.split('.')
+			
+			int = numSplit[0];
+			if(int.length > 3){
+				int = int.substr(0,int.length-3)+ ',' + int.substr(int.length-3,int.length);
+			}
+
+			dec = numSplit[1];
+
+			
+
+			return (type === 'exp' ? '-' :'+') + ' ' + int + dec;
+
 		getDOMstrings: function(){
 		return DOMstrings;
 		}
@@ -217,6 +284,7 @@ var controller = (function(UICtrl,budgetCtrl){
 
 		UICtrl.displayBudget(budget);
 
+
 	};
 
 
@@ -231,6 +299,7 @@ var controller = (function(UICtrl,budgetCtrl){
 				UICtrl.addListItem(newItem,input.type);
 				UICtrl.clearFields();
 				updateBudget();
+				updatePercentages();
 			}
 			else{
 				UICtrl.clearFields();
@@ -249,8 +318,16 @@ var controller = (function(UICtrl,budgetCtrl){
 		budgetCtrl.deleteItem(type,id);
 		UICtrl.deleteListItem(itemID);
 		updateBudget();
+		updatePercentages();
 		
 		
+	};
+
+	var updatePercentages = function(){
+		budgetCtrl.calculatePercentages();
+		var perc = budgetCtrl.getPercentages();
+		UICtrl.displayPercentages(perc);
+
 	};
 
 	return{
